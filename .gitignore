@@ -32,3 +32,5 @@ models/tailsitter/tailsitter.sdf
 models/advanced_plane/advanced_plane.sdf
 models/quadtailsitter/quadtailsitter.sdf
 models/uuv_bluerov2_heavy/uuv_bluerov2_heavy.sdf
+models/iris_depth_camera/iris_depth_camera.sdf
+models/uuv_hippocampus/uuv_hippocampus.sdf
