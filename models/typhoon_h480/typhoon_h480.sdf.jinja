@@ -387,11 +387,11 @@
       <sensor name="camera" type="camera">
         <pose>0.0 0 -0.162 0 0 0</pose>
         <camera>
-          <horizontal_fov>2.0</horizontal_fov>
+          <horizontal_fov>1.41372</horizontal_fov>
           <image>
             <format>R8G8B8</format>
-            <width>640</width>
-            <height>360</height>
+            <width>1920</width>
+            <height>1080</height>
           </image>
           <clip>
             <near>0.05</near>
@@ -1128,21 +1128,121 @@
       </physics>
     </joint>
 
-    <include>
-      <uri>model://sonar</uri>
-      <pose>0.08 0 -0.03 0 0 3.141592</pose>
-    </include>
-    <joint name="sonar_joint" type="revolute">
-      <child>sonar::link</child>
-      <parent>base_link</parent>
-      <axis>
-        <xyz>0 0 1</xyz>
-        <limit>
-          <upper>0</upper>
-          <lower>0</lower>
-        </limit>
-      </axis>
-    </joint>
+  
+
+
+
+
+  <!-- 3D LiDAR mounted on the drone body -->
+
+
+  <link name="drone_lidar_link">
+    <pose>0.3 0 -0.1 0 1.5708 0</pose>
+
+    <inertial>
+      <mass>0.15</mass>
+      <inertia>
+        <ixx>0.0001</ixx>
+        <ixy>0</ixy>
+        <ixz>0</ixz>
+        <iyy>0.0001</iyy>
+        <iyz>0</iyz>
+        <izz>0.0001</izz>
+      </inertia>
+    </inertial>
+
+    <visual name="drone_lidar_visual">
+      <geometry>
+        <cylinder>
+          <radius>0.04</radius>
+          <length>0.06</length>
+        </cylinder>
+      </geometry>
+      <material>
+        <script>
+          <name>Gazebo/Black</name>
+          <uri>file://media/materials/scripts/gazebo.material</uri>
+        </script>
+      </material>
+    </visual>
+
+    <collision name="drone_lidar_collision">
+      <geometry>
+        <cylinder>
+          <radius>0.04</radius>
+          <length>0.06</length>
+        </cylinder>
+      </geometry>
+    </collision>
+
+    <sensor name="drone_3d_lidar" type="gpu_ray">
+      <pose>0 0 0 0 0 0</pose>
+
+
+      <always_on>true</always_on>
+      <visualize>false</visualize>
+      <update_rate>20</update_rate>
+
+      <ray>
+        <scan>
+          <horizontal>
+            <samples>512</samples>
+            <resolution>2</resolution>
+            <min_angle>-3.14159265</min_angle>
+            <max_angle>3.14159265</max_angle>
+          </horizontal>
+
+          <vertical>
+            <samples>128</samples>
+            <resolution>2</resolution>
+            <min_angle>-1.5708</min_angle>
+            <max_angle>1.5708</max_angle>
+          </vertical>
+        </scan>
+
+        <range>
+          <min>0.05</min>
+          <max>50.0</max>
+          <resolution>0.02</resolution>
+        </range>
+
+        <noise>
+          <type>gaussian</type>
+          <mean>0.0</mean>
+          <stddev>0.01</stddev>
+        </noise>
+      </ray>
+
+      <plugin name="drone_lidar_plugin" filename="libgazebo_ros_velodyne_gpu_laser.so">
+        <robotNamespace>/iris_drone_1</robotNamespace>
+        <topicName>/drone_lidar/points</topicName>
+        <frameName>drone_lidar_link</frameName>
+        <min_range>0.05</min_range>
+        <max_range>50.0</max_range>
+        <gaussianNoise>0.01</gaussianNoise>
+        <organize_cloud>true</organize_cloud>
+      </plugin>
+    </sensor>
+  </link>
+
+  <joint name="drone_lidar_joint" type="fixed">
+    <parent>base_link</parent>
+    <child>drone_lidar_link</child>
+    <pose>0 0 0 0 0 0</pose>
+  </joint>
+
+
+
+
+
+
+
+
+
+
+    
+
+
 
 
     <include>
@@ -1356,7 +1456,7 @@
           <zero_position_armed>0</zero_position_armed>
           <joint_control_type>position_gztopic</joint_control_type>
           <gztopic>/gimbal_roll_cmd</gztopic>
-          <joint_name>typhoon_h480::cgo3_camera_joint</joint_name>
+          <joint_name>cgo3_camera_joint</joint_name>
         </channel>
         <channel name="gimbal_pitch">
           <input_index>7</input_index>
@@ -1366,7 +1466,7 @@
           <zero_position_armed>0</zero_position_armed>
           <joint_control_type>position_gztopic</joint_control_type>
           <gztopic>/gimbal_pitch_cmd</gztopic>
-          <joint_name>typhoon_h480::cgo3_camera_joint</joint_name>
+          <joint_name>cgo3_camera_joint</joint_name>
         </channel>
         <channel name="gimbal_yaw">
           <input_index>8</input_index>
@@ -1376,7 +1476,7 @@
           <zero_position_armed>0</zero_position_armed>
           <joint_control_type>position_gztopic</joint_control_type>
           <gztopic>/gimbal_yaw_cmd</gztopic>
-          <joint_name>typhoon_h480::cgo3_vertical_arm_joint</joint_name>
+          <joint_name>cgo3_vertical_arm_joint</joint_name>
         </channel>
         <channel name="left_leg">
           <input_index>9</input_index>
@@ -1423,9 +1523,10 @@
       <imuTopic>/imu</imuTopic>
     </plugin>
     <plugin name='gimbal_controller' filename='libgazebo_gimbal_controller_plugin.so'>
-      <joint_yaw>typhoon_h480::cgo3_vertical_arm_joint</joint_yaw>
-      <joint_roll>typhoon_h480::cgo3_horizontal_arm_joint</joint_roll>
-      <joint_pitch>typhoon_h480::cgo3_camera_joint</joint_pitch>
+      <udp_gimbal_port_remote> {{udp_onboard_gimbal_port_remote}} </udp_gimbal_port_remote>
+      <joint_yaw>cgo3_vertical_arm_joint</joint_yaw>
+      <joint_roll>cgo3_horizontal_arm_joint</joint_roll>
+      <joint_pitch>cgo3_camera_joint</joint_pitch>
       <control_gimbal_channels>
         <channel>
           <joint_control_pid>
